@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Tomato Crate Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            text-align: center;
+        }
+
+        h2 {
+            margin-top: 20px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 15px;
+            border-radius: 12px;
+            width: 220px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .value {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .safe {
+            color: green;
+        }
+
+        .spoiled {
+            color: red;
+        }
+
+        canvas {
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>🍅 Smart Tomato Crate Dashboard</h2>
+
+<div class="container">
+
+    <div class="card">
+        <h3>🌡 Temperature</h3>
+        <div id="temp" class="value">--</div>
+    </div>
+
+    <div class="card">
+        <h3>💧 Humidity</h3>
+        <div id="hum" class="value">--</div>
+    </div>
+
+    <div class="card">
+        <h3>🧪 Gas Level</h3>
+        <div id="gas" class="value">--</div>
+    </div>
+
+    <div class="card">
+        <h3>Status</h3>
+        <div id="status" class="value">--</div>
+    </div>
+
+</div>
+
+<canvas id="chart" width="700" height="300"></canvas>
+
+<script>
+
+let tempData = [];
+let humData = [];
+let gasData = [];
+let labels = [];
+
+const ctx = document.getElementById('chart').getContext('2d');
+
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Temperature',
+                data: tempData,
+                borderColor: 'red',
+                fill: false
+            },
+            {
+                label: 'Humidity',
+                data: humData,
+                borderColor: 'blue',
+                fill: false
+            },
+            {
+                label: 'Gas',
+                data: gasData,
+                borderColor: 'green',
+                fill: false
+            }
+        ]
+    },
+    options: {
+        responsive: false
+    }
+});
+
+async function fetchData() {
+    const response = await fetch('http://127.0.0.1:5000/data');
+    const data = await response.json();
+
+    if (data.length > 0) {
+
+        let latest = data[data.length - 1];
+
+        document.getElementById("temp").innerText = latest.temperature + " °C";
+        document.getElementById("hum").innerText = latest.humidity + " %";
+        document.getElementById("gas").innerText = latest.gas;
+
+        let statusElement = document.getElementById("status");
+        statusElement.innerText = latest.status;
+
+        if (latest.status === "SPOILED") {
+            statusElement.className = "value spoiled";
+        } else {
+            statusElement.className = "value safe";
+        }
+
+        labels.push(new Date().toLocaleTimeString());
+        tempData.push(latest.temperature);
+        humData.push(latest.humidity);
+        gasData.push(latest.gas);
+
+        if (labels.length > 10) {
+            labels.shift();
+            tempData.shift();
+            humData.shift();
+            gasData.shift();
+        }
+
+        chart.update();
+    }
+}
+
+setInterval(fetchData, 3000);
+
+</script>
+
+</body>
+</html>

@@ -117,43 +117,48 @@ const chart = new Chart(ctx, {
 });
 
 async function fetchData() {
-    const response = await fetch('http://127.0.0.1:5000/data');
-    const data = await response.json();
+    try {
+        const response = await fetch('/data');   // ✅ FIXED HERE
+        const data = await response.json();
 
-    if (data.length > 0) {
+        if (data.length > 0) {
 
-        let latest = data[data.length - 1];
+            let latest = data[data.length - 1];
 
-        document.getElementById("temp").innerText = latest.temperature + " °C";
-        document.getElementById("hum").innerText = latest.humidity + " %";
-        document.getElementById("gas").innerText = latest.gas;
+            document.getElementById("temp").innerText = latest.temperature + " °C";
+            document.getElementById("hum").innerText = latest.humidity + " %";
+            document.getElementById("gas").innerText = latest.gas;
 
-        let statusElement = document.getElementById("status");
-        statusElement.innerText = latest.status;
+            let statusElement = document.getElementById("status");
+            statusElement.innerText = latest.status;
 
-        if (latest.status === "SPOILED") {
-            statusElement.className = "value spoiled";
-        } else {
-            statusElement.className = "value safe";
+            if (latest.status === "SPOILED") {
+                statusElement.className = "value spoiled";
+            } else {
+                statusElement.className = "value safe";
+            }
+
+            labels.push(new Date().toLocaleTimeString());
+            tempData.push(latest.temperature);
+            humData.push(latest.humidity);
+            gasData.push(latest.gas);
+
+            if (labels.length > 10) {
+                labels.shift();
+                tempData.shift();
+                humData.shift();
+                gasData.shift();
+            }
+
+            chart.update();
         }
-
-        labels.push(new Date().toLocaleTimeString());
-        tempData.push(latest.temperature);
-        humData.push(latest.humidity);
-        gasData.push(latest.gas);
-
-        if (labels.length > 10) {
-            labels.shift();
-            tempData.shift();
-            humData.shift();
-            gasData.shift();
-        }
-
-        chart.update();
+    } catch (error) {
+        console.error("Error fetching data:", error);
     }
 }
 
 setInterval(fetchData, 3000);
+fetchData();
 
 </script>
 

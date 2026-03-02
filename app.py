@@ -1,10 +1,14 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 
 data_store = []
+
+@app.route("/")   # 👈 ADD THIS
+def home():
+    return render_template("index.html")
 
 @app.route('/update', methods=['POST'])
 def update_data():
@@ -14,7 +18,6 @@ def update_data():
     humidity = data['humidity']
     gas = data['gas']
 
-    # Spoilage Logic
     if temperature > 25 or humidity > 90 or gas > 500:
         status = "SPOILED"
     else:
